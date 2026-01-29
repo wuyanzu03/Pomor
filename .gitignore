@@ -1,0 +1,12 @@
+# 依赖，用 npm install 可恢复
+node_modules/
+
+# 打包输出，用 npm run dist 可重新生成
+release/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

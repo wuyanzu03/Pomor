@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pomor Timer - 番茄计时器</title>
+    <meta
+      name="description"
+      content="Pomor Timer：轻量、好看的番茄钟。支持自定义时长、命名、圆环进度、按日期统计。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg">
+      <div class="blob b1"></div>
+      <div class="blob b2"></div>
+      <div class="blob b3"></div>
+      <div class="grid"></div>
+    </div>
+
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="#">
+          <span class="brand-dot"></span>
+          <span class="brand-text">Pomor</span>
+        </a>
+        <nav class="nav-links">
+          <a href="#features">功能</a>
+          <a href="#download">下载</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div class="pill">
+          <span class="pill-dot"></span>
+          <span>Pomor Timer · 专注，也要好看</span>
+        </div>
+
+        <h1 class="hero-title">
+          把专注变成一种
+          <span class="grad">流动的节奏</span>
+        </h1>
+        <p class="hero-sub">
+          在工作的宁静韵律中，将想法塑造成清晰的行动
+        </p>
+
+        <div class="hero-cta" id="download">
+          <a class="btn primary" id="btnDownload" href="#" download>
+            下载 Windows 安装包
+            <span class="btn-meta" id="btnMeta">（即将上线）</span>
+          </a>
+          <button class="btn ghost" id="btnCopy">
+            复制下载链接
+          </button>
+        </div>
+
+        <div class="hero-cards">
+          <div class="card">
+            <div class="card-kicker">圆环渐变</div>
+            <div class="card-title">进度一眼可见</div>
+            <div class="card-desc">渐变描边与平滑动画，随专注时间逐步填满。</div>
+          </div>
+          <div class="card">
+            <div class="card-kicker">本次命名</div>
+            <div class="card-title">把任务说清楚</div>
+            <div class="card-desc">每轮番茄可加标题，统计里能回看最近记录。</div>
+          </div>
+          <div class="card">
+            <div class="card-kicker">本地数据</div>
+            <div class="card-title">无需登录</div>
+            <div class="card-desc">按日期分组统计：轮数与总分钟数，数据保存在本机。</div>
+          </div>
+        </div>
+
+        <div class="preview">
+          <div class="preview-head">
+            <div class="dots">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="preview-title">Pomor Timer</div>
+            <div class="preview-chip">Desktop</div>
+          </div>
+          <div class="preview-body">
+            <div class="mock-left">
+              <div class="mock-input">写周报</div>
+              <div class="mock-ring">
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="mockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#f97316" />
+                      <stop offset="100%" stop-color="#ec4899" />
+                    </linearGradient>
+                  </defs>
+                  <circle class="mock-bg" cx="60" cy="60" r="48" />
+                  <circle class="mock-fg" cx="60" cy="60" r="48" />
+                </svg>
+                <div class="mock-time">12:34</div>
+              </div>
+              <div class="mock-actions">
+                <div class="mock-btn primary">开始</div>
+                <div class="mock-btn">重置</div>
+              </div>
+            </div>
+            <div class="mock-right">
+              <div class="mock-stat">
+                <div class="mock-stat-date">2026-01-29</div>
+                <div class="mock-stat-meta">3 轮 · 75.0 分钟</div>
+              </div>
+              <div class="mock-stat">
+                <div class="mock-stat-date">2026-01-28</div>
+                <div class="mock-stat-meta">2 轮 · 50.0 分钟</div>
+              </div>
+              <div class="mock-note">
+                支持自定义时长（≥ 1 分钟）与完成提示音。
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="feature-showcase">
+          <div class="feature-left">
+            <div class="feature-badge">
+              <span class="feature-dot"></span>
+              <span>功能一览</span>
+            </div>
+            <h2 class="feature-title-lg">把专注保持在视线中</h2>
+            <p class="feature-sub">
+              轻量番茄钟让你更清楚地知道“现在做什么”。支持自定义时长、命名、完成提示音与按日期统计。
+            </p>
+            <div class="feature-list">
+              <div class="feature-item">
+                <span class="feature-check">✓</span>
+                开始 / 暂停 / 重置
+              </div>
+              <div class="feature-item">
+                <span class="feature-check">✓</span>
+                自定义时间（≥ 1 分钟）
+              </div>
+              <div class="feature-item">
+                <span class="feature-check">✓</span>
+                每轮可命名
+              </div>
+              <div class="feature-item">
+                <span class="feature-check">✓</span>
+                完成提示音 + 通知
+              </div>
+              <div class="feature-item">
+                <span class="feature-check">✓</span>
+                按日期统计 · 离线可用
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-right">
+            <div class="feature-visual" aria-label="功能示意区域，悬停可轻微上下浮动">
+              <div class="visual-card main">
+                <div class="visual-title">Pomor Timer</div>
+                <div class="visual-list">
+                  <div class="visual-row">
+                    <span class="visual-dot"></span>
+                    写周报
+                  </div>
+                  <div class="visual-row">
+                    <span class="visual-dot"></span>
+                    复盘今日目标
+                  </div>
+                  <div class="visual-row">
+                    <span class="visual-dot"></span>
+                    阅读 20 页
+                  </div>
+                </div>
+              </div>
+              <div class="visual-card glass">
+                <div class="visual-ring"></div>
+                <div class="visual-time">12:34</div>
+                <div class="visual-chip">专注中</div>
+              </div>
+              <div class="visual-panel">
+                <div class="visual-panel-title">今日统计</div>
+                <div class="visual-panel-meta">3 轮 · 75 分钟</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="faq">
+        <h2 class="section-title">FAQ</h2>
+        <div class="faq">
+          <details>
+            <summary>安装时提示“未知发布者”怎么办？</summary>
+            <p>这是未做代码签名的常见提示。你可以选择继续安装，或等后续版本加入签名。</p>
+          </details>
+          <details>
+            <summary>我的数据存在哪里？</summary>
+            <p>数据保存在本机用户目录下的应用配置文件中，不会上传到服务器。</p>
+          </details>
+          <details>
+            <summary>可以支持 macOS / Linux 吗？</summary>
+            <p>可以。Electron 支持多平台，后续只需要补充对应打包配置与发布即可。</p>
+          </details>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="footer-inner">
+          <div class="footer-left">
+            <div class="brand-mini">
+              <span class="brand-dot"></span>
+              <span>Pomor Timer</span>
+            </div>
+            <div class="footer-note">© <span id="year"></span> Pomor. All rights reserved.</div>
+          </div>
+          <div class="footer-right">
+            <a href="#download">下载</a>
+            <a href="#features">功能</a>
+            <a href="#faq">FAQ</a>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

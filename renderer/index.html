@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pomor 番茄计时器</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <link rel="stylesheet" href="./style.css" />
+    <!-- 使用本地 Vue（避免离线/打包后 CDN 失效导致白屏） -->
+    <script src="../node_modules/vue/dist/vue.global.prod.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      const { createApp, ref, computed, onMounted } = Vue;
+
+      const App = {
+        setup() {
+          const defaultMinutes = 25; // 默认 25 分钟
+          const totalSeconds = ref(defaultMinutes * 60);
+          const remainingSeconds = ref(totalSeconds.value);
+          const isRunning = ref(false);
+          const timerId = ref(null);
+
+          const stats = ref({});
+          const customSeconds = ref(defaultMinutes * 60);
+          const sessionName = ref('');
+          let audioCtx = null;
+
+          const formattedTime = computed(() => {
+            const m = String(Math.floor(remainingSeconds.value / 60)).padStart(2, '0');
+            const s = String(remainingSeconds.value % 60).padStart(2, '0');
+            return `${m}:${s}`;
+          });
+
+          const progressPercent = computed(() => {
+            const used = totalSeconds.value - remainingSeconds.value;
+            return Math.min(100, Math.max(0, (used / totalSeconds.value) * 100));
+          });
+
+          const todayKey = () => {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+          };
+
+          const formatMinutes = (seconds) => {
+            return (seconds / 60).toFixed(1);
+          };
+
+          const sortedStats = computed(() => {
+            const entries = Object.entries(stats.value || {});
+            // 按日期倒序
+            return entries.sort(([d1], [d2]) => (d1 < d2 ? 1 : -1));
+          });
+
+          const loadStats = async () => {
+            if (window.pomorApi && window.pomorApi.getStats) {
+              stats.value = await window.pomorApi.getStats();
+            }
+          };
+
+          const deleteRecord = async (date, index) => {
+            if (!window.pomorApi || !window.pomorApi.deleteSession) return;
+            const res = await window.pomorApi.deleteSession({ date, index });
+            stats.value = res;
+          };
+
+          const sessionActualIndex = (info, displayIdx) => {
+            const items = info?.items || [];
+            return items.length - 1 - displayIdx;
+          };
+
+          const saveCompletedSession = async () => {
+            if (!window.pomorApi || !window.pomorApi.addSession) return;
+            const res = await window.pomorApi.addSession({
+              date: todayKey(),
+              seconds: totalSeconds.value,
+              name: sessionName.value
+            });
+            stats.value = res;
+          };
+
+          const playBeep = async () => {
+            try {
+              const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+              if (!AudioContextCtor) return;
+
+              if (!audioCtx) {
+                audioCtx = new AudioContextCtor();
+              }
+              if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+              }
+
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              const filter = audioCtx.createBiquadFilter();
+              filter.type = 'lowpass';
+              filter.frequency.value = 1800;
+              filter.Q.value = 0.5;
+
+              // 温和提示音：较低音高、较小音量、低通柔化，约 2s
+              const durationSeconds = 2;
+              osc.type = 'sine';
+              osc.frequency.value = 440;
+
+              const now = audioCtx.currentTime;
+              gain.gain.setValueAtTime(0.0001, now);
+              gain.gain.exponentialRampToValueAtTime(0.22, now + 0.05);
+              gain.gain.setValueAtTime(0.22, now + durationSeconds - 0.1);
+              gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSeconds);
+
+              osc.connect(filter);
+              filter.connect(gain);
+              gain.connect(audioCtx.destination);
+
+              osc.start(now);
+              osc.stop(now + durationSeconds + 0.02);
+            } catch {
+              // 忽略音频失败（不会影响计时器主流程）
+            }
+          };
+
+          const start = () => {
+            if (isRunning.value) return;
+            if (remainingSeconds.value <= 0) {
+              remainingSeconds.value = totalSeconds.value;
+            }
+            isRunning.value = true;
+            timerId.value = setInterval(async () => {
+              if (remainingSeconds.value > 0) {
+                remainingSeconds.value -= 1;
+              } else {
+                clearInterval(timerId.value);
+                timerId.value = null;
+                isRunning.value = false;
+                await playBeep();
+                await saveCompletedSession();
+                // 简单提示
+                new Notification('番茄结束', {
+                  body: '本轮番茄时间已完成！'
+                });
+              }
+            }, 1000);
+          };
+
+          const pause = () => {
+            if (!isRunning.value) return;
+            isRunning.value = false;
+            if (timerId.value) {
+              clearInterval(timerId.value);
+              timerId.value = null;
+            }
+          };
+
+          const reset = () => {
+            pause();
+            remainingSeconds.value = totalSeconds.value;
+          };
+
+          const setDuration = (seconds) => {
+            const safeSeconds = Math.max(1, Math.floor(Number(seconds) || 0));
+            customSeconds.value = safeSeconds;
+            const running = isRunning.value;
+            pause();
+            totalSeconds.value = safeSeconds;
+            remainingSeconds.value = safeSeconds;
+            if (running) {
+              start();
+            }
+          };
+
+          const applyCustomDuration = () => {
+            setDuration(customSeconds.value);
+          };
+
+          onMounted(async () => {
+            if ('Notification' in window && Notification.permission === 'default') {
+              Notification.requestPermission();
+            }
+            await loadStats();
+          });
+
+          return {
+            formattedTime,
+            isRunning,
+            progressPercent,
+            sortedStats,
+            formatMinutes,
+            customSeconds,
+            sessionName,
+            start,
+            pause,
+            reset,
+            setDuration,
+            applyCustomDuration,
+            deleteRecord,
+            sessionActualIndex
+          };
+        },
+        template: `
+          <div class="app-root">
+            <div class="card timer-card">
+              <h1 class="title">Pomor 番茄计时器</h1>
+              <div class="name-row">
+                <input
+                  class="name-input"
+                  type="text"
+                  maxlength="40"
+                  v-model="sessionName"
+                  placeholder="给本次倒计时起个名字（可选）"
+                />
+              </div>
+
+              <div class="ring-wrap" :class="{ running: isRunning }">
+                <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#f97316" />
+                      <stop offset="100%" stop-color="#ec4899" />
+                    </linearGradient>
+                  </defs>
+                  <circle class="ring-bg" cx="60" cy="60" r="52" />
+                  <circle
+                    class="ring-fg"
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    :style="{
+                      strokeDasharray: (2 * Math.PI * 52).toFixed(2),
+                      strokeDashoffset: ((1 - progressPercent / 100) * 2 * Math.PI * 52).toFixed(2)
+                    }"
+                  />
+                </svg>
+
+                <div class="ring-center">
+                  <div class="time-display">{{ formattedTime }}</div>
+                </div>
+              </div>
+
+              <div class="duration-options">
+                <button class="chip" @click="setDuration(25 * 60)">25 分钟</button>
+                <button class="chip" @click="setDuration(15 * 60)">15 分钟</button>
+                <button class="chip" @click="setDuration(5 * 60)">5 分钟</button>
+              </div>
+
+              <div class="custom-duration">
+                <div class="custom-label">自定义（≥ 1 秒）</div>
+                <div class="custom-row">
+                  <input
+                    class="custom-input"
+                    type="number"
+                    min="1"
+                    step="1"
+                    v-model.number="customSeconds"
+                    @keyup.enter="applyCustomDuration"
+                    @blur="applyCustomDuration"
+                  />
+                  <span class="custom-unit">秒</span>
+                  <button class="chip" @click="applyCustomDuration">应用</button>
+                </div>
+              </div>
+
+              <div class="actions">
+                <button
+                  class="btn primary"
+                  @click="isRunning ? pause() : start()"
+                >
+                  {{ isRunning ? '暂停' : '开始' }}
+                </button>
+                <button class="btn ghost" @click="reset">重置</button>
+              </div>
+            </div>
+
+            <div class="card stats-card">
+              <h2 class="subtitle">统计（按日期分组）</h2>
+              <div v-if="sortedStats.length === 0" class="empty-text">
+                暂无数据，先完成一轮番茄吧～
+              </div>
+              <div v-else class="stats-list">
+                <div
+                  v-for="[date, info] in sortedStats"
+                  :key="date"
+                  class="stats-group"
+                >
+                  <div class="stats-item">
+                    <div class="stats-date">{{ date }}</div>
+                    <div class="stats-detail">
+                      <span>{{ info.sessions }} 轮</span>
+                      <span>共 {{ formatMinutes(info.totalSeconds) }} 分钟</span>
+                    </div>
+                  </div>
+
+                  <div v-if="info && info.items && info.items.length" class="stats-sessions">
+                    <div class="stats-sessions-title">{{ date }} 最近记录</div>
+                    <div class="stats-sessions-list">
+                      <div
+                        v-for="(it, idx) in (info.items.slice(-3).reverse())"
+                        :key="date + '-' + it.endedAt + '-' + idx"
+                        class="stats-session-item"
+                      >
+                        <div class="stats-session-text">
+                          <div class="stats-session-name">{{ it.name }}</div>
+                          <div class="stats-session-meta">{{ formatMinutes(it.seconds) }} 分钟</div>
+                        </div>
+                        <button
+                          type="button"
+                          class="stats-session-delete"
+                          title="删除此条记录"
+                          @click="deleteRecord(date, sessionActualIndex(info, idx))"
+                        >删除</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      };
+
+      createApp(App).mount('#app');
+    </script>
+  </body>
+</html>
+
