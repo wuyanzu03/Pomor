@@ -134,22 +134,32 @@
     });
   }
 
-  // 彩蛋：点击 Pomor（导航或页脚品牌）满 5 次后播放音乐（需把 MP3 放到 docs/assets/ 下）
+  // 彩蛋：点击 Pomor（导航或页脚品牌）满 5 次后播放音乐；播放结束后自动重置计数，可再次触发
   const POMOR_CLICK_THRESHOLD = 5;
-  const POMOR_MUSIC_URL = 'assets/Standard%20recording%201.mp3';
+  const POMOR_MUSIC_FILENAME = 'assets/Standard%20recording%201.mp3';
   let pomorClickCount = 0;
   let pomorMusicPlayed = false;
+
+  function getPomorMusicUrl() {
+    const base = location.href.replace(/\/[^/]*$/, '/');
+    return base + POMOR_MUSIC_FILENAME;
+  }
 
   function setupPomorEasterEgg() {
     const els = document.querySelectorAll('.brand, .brand-mini');
     if (!els.length) return;
     els.forEach((el) => {
-      el.addEventListener('click', (e) => {
+      el.addEventListener('click', () => {
         pomorClickCount += 1;
         if (pomorClickCount >= POMOR_CLICK_THRESHOLD && !pomorMusicPlayed) {
           pomorMusicPlayed = true;
-          const audio = new Audio(POMOR_MUSIC_URL);
+          const audio = new Audio(getPomorMusicUrl());
+          audio.addEventListener('ended', () => {
+            pomorClickCount = 0;
+            pomorMusicPlayed = false;
+          });
           audio.play().catch(() => {
+            pomorMusicPlayed = false;
             window.alert('音乐未播放：请确认已将 Standard recording 1.mp3 放到 docs/assets/ 并已推送到 GitHub。');
           });
         }
