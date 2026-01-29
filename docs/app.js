@@ -137,7 +137,7 @@
   // 彩蛋：点击 Pomor 满 5 次后播放音乐 + 烟花绽放；播放结束后重置计数；音量为一半
   const POMOR_CLICK_THRESHOLD = 5;
   const POMOR_MUSIC_FILENAME = 'assets/Standard%20recording%201.mp3';
-  const POMOR_MUSIC_VOLUME = 0.5;
+  const POMOR_MUSIC_VOLUME = 0.3;
   const FIREWORK_BURST_SPAN_MS = 10000;
   const FIREWORK_COLORS = ['#f97316', '#ec4899', '#a855f7', '#fbbf24', '#22d3ee'];
   let pomorClickCount = 0;
